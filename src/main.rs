@@ -1,14 +1,10 @@
+mod block;
+mod file;
 mod path;
 
-use std::{
-    fs::File,
-    io::{BufReader, Read},
-    path::Path,
-};
-
 use clap::Parser;
+use file::send_file;
 use path::FilePath;
-use walkdir::WalkDir;
 
 /// rs-snyc, a local and remote file-copying tool
 #[derive(Parser, Debug)]
@@ -43,30 +39,6 @@ struct Cli {
     compress: bool,
 }
 
-const BLOCK_SIZE: usize = 4 * 1024;
-
-fn process_file(path: &Path) -> anyhow::Result<()> {
-    let file = File::open(path)?;
-    let mut reader = BufReader::new(file);
-    let mut buffer = vec![0; 10]; // vec![0; BLOCK_SIZE];
-    let mut blocks = Vec::new();
-
-    while let Ok(bytes_read) = reader.read(&mut buffer) {
-        if bytes_read == 0 {
-            break;
-        }
-
-        blocks.push(buffer[..bytes_read].to_owned());
-    }
-
-    println!("{:#?}", blocks.len());
-
-    // Here you can apply checksum logic or incremental copy
-    // compute_checksum(buffer.as_slice());
-
-    Ok(())
-}
-
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
@@ -79,7 +51,7 @@ fn main() -> anyhow::Result<()> {
         } => todo!(),
     };
 
-    let _dest = match FilePath::parse(&cli.destination) {
+    let dest = match FilePath::parse(&cli.destination) {
         FilePath::Local(path) => path,
         FilePath::Remote {
             user: _,
@@ -88,14 +60,14 @@ fn main() -> anyhow::Result<()> {
         } => todo!(),
     };
 
-    for entry in WalkDir::new(src) {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file() {
-            println!("hey {:?}", path.display());
-            process_file(path)?;
-        }
-    }
+    send_file(src, dest)?;
+
+    // for entry in WalkDir::new(src) {
+    //     let entry = entry?;
+    //     let src_path = entry.path();
+    //     if src_path.is_file() {
+    //     }
+    // }
 
     Ok(())
 }
