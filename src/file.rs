@@ -6,6 +6,9 @@ use std::{
 
 use crate::block::Block;
 
+use anyhow::Context;
+use log::debug;
+
 pub struct ChunkedFile(pub Vec<Block>);
 
 impl ChunkedFile {
@@ -41,8 +44,8 @@ pub fn should_copy(src: &Path, dest: &Path) -> anyhow::Result<CopyKind> {
         return Ok(CopyKind::Full);
     }
 
-    let chunked_src = retrieve_chunked_file(src)?;
-    let chunked_dest = retrieve_chunked_file(dest)?;
+    let chunked_src = split_file(src)?;
+    let chunked_dest = split_file(dest)?;
 
     for (src_block, dest_block) in chunked_src.0.iter().zip(chunked_dest.0.iter()) {
         let src_checksum = src_block.compute_checksum();
@@ -56,7 +59,7 @@ pub fn should_copy(src: &Path, dest: &Path) -> anyhow::Result<CopyKind> {
     Ok(CopyKind::None)
 }
 
-pub fn retrieve_chunked_file(path: &Path) -> anyhow::Result<ChunkedFile> {
+pub fn split_file(path: &Path) -> anyhow::Result<ChunkedFile> {
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);
     let mut buffer = vec![0; 10]; // vec![0; BLOCK_SIZE];
@@ -74,14 +77,30 @@ pub fn retrieve_chunked_file(path: &Path) -> anyhow::Result<ChunkedFile> {
 }
 
 pub fn send_file(src: &Path, dest: &Path) -> anyhow::Result<()> {
-    if !matches!(should_copy(src, dest)?, CopyKind::None) {
-        println!("Copying file: {} -> {}", src.display(), dest.display());
-        copy_file(src, dest)?;
+    let copy_kind = should_copy(src, dest)?;
+    if !matches!(copy_kind, CopyKind::None) {
+        debug!("Copying file: {} -> {}", src.display(), dest.display());
+        copy_file(src, dest, &copy_kind)?;
     }
 
     Ok(())
 }
 
-fn copy_file(src: &Path, dest: &Path) -> anyhow::Result<()> {
-    todo!()
+fn copy_file(src: &Path, dest: &Path, copy_kind: &CopyKind) -> anyhow::Result<()> {
+    match copy_kind {
+        CopyKind::Full => {
+            let dest = if dest.is_dir() {
+                let file_name = src.file_name().context("Source path is invalid")?;
+                dest.join(file_name)
+            } else {
+                dest.to_path_buf()
+            };
+
+            fs::copy(src, dest)?;
+        }
+        CopyKind::Incremental => todo!(),
+        CopyKind::None => unreachable!(),
+    }
+
+    Ok(())
 }

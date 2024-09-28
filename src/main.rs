@@ -4,6 +4,7 @@ mod path;
 
 use clap::Parser;
 use file::send_file;
+use log::info;
 use path::FilePath;
 
 /// rs-snyc, a local and remote file-copying tool
@@ -42,6 +43,14 @@ struct Cli {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
+    let mut env_builder = env_logger::Builder::from_default_env();
+    if cli.verbose {
+        env_builder.filter_level(log::LevelFilter::Debug);
+    } else {
+        env_builder.filter_level(log::LevelFilter::Info);
+    }
+    env_builder.init();
+
     let src = match FilePath::parse(&cli.source) {
         FilePath::Local(path) => path,
         FilePath::Remote {
@@ -59,6 +68,8 @@ fn main() -> anyhow::Result<()> {
             path: _,
         } => todo!(),
     };
+
+    info!("Starting synchronization from {:?} to {:?}", src, dest);
 
     send_file(src, dest)?;
 
