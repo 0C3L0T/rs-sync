@@ -1,0 +1,20 @@
+[package]
+name = "syncrs-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = {  version = "1.4.1", features = ["derive"] }
+libfuzzer-sys = "0.4"
+syncrs = { path = ".." }
+
+[[bin]]
+name = "fuzz_compute_delta"
+path = "fuzz_targets/fuzz_compute_delta.rs"
+test = false
+doc = false
+bench = false
