@@ -1,4 +1,4 @@
-##SyncRs (Rsync clone in rust)
+## SyncRs (Rsync clone in rust)
 Made by Gejsi and Merijn
 
 ### Description
