@@ -1,14 +1,5 @@
-## Laks & Vjerdha - SyncRs (Rsync clone in rust)
-
-### Students
-
-- Merijn Laks <MerijnLaks@protonmail.com>
-- Gejsi Vjerdha <gejsi.vjerdha@ip-paris.fr>
-
-### Repository
-
-- https://gitlab.telecom-paris.fr/net7212/2425/project-laks-vjerdha
-- `git@gitlab.enst.fr:net7212/2425/project-laks-vjerdha.git`
+##SyncRs (Rsync clone in rust)
+Made by Gejsi and Merijn
 
 ### Description
 
