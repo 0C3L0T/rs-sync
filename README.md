@@ -1,4 +1,5 @@
 ## SyncRs (Rsync clone in rust)
+A type-safe, memory-safe clone of Rsync in Rust.
 Made by Gejsi and Merijn
 
 ### Description
